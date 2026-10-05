@@ -44,3 +44,20 @@ You are free to use any frameworks/NuGet packages that you see fit. You should p
 Feel free to use code comments to describe your changes. You are also welcome to update this readme with any important details for us to consider.
 
 Once you have completed the exercise either ensure your repository is available publicly or contact the hiring manager to set up a private share.
+
+# Solution notes
+
+**Design.** `RebateService` now only orchestrates: it looks up the rebate and product, runs the checks shared by every incentive type, delegates the calculation to an `IIncentiveCalculator` (one class per incentive type, Strategy pattern) and stores the result. Data stores are injected through interfaces so the service can be unit tested.
+
+**Adding a new incentive type** doesn't require changing `RebateService`:
+
+1. Add the value to `IncentiveType` and `SupportedIncentiveType`.
+2. Add a class implementing `IIncentiveCalculator` in `Calculators/`.
+3. Register it in the runner's `ServiceCollection` (or your DI container).
+
+**Behaviour.** The incentive rules are unchanged. The refactor fixes two `NullReferenceException`s in the original code (the rebate was used before its null check, and `FixedCashAmount` never checked the product).
+
+**Running it.**
+
+- Tests: `dotnet test`
+- Runner: `dotnet run --project Smartwyre.DeveloperTest.Runner`. The real data stores are stubs, so the runner uses in-memory stores with sample data (e.g. rebate `REB-RATE`, product `PROD-ALL`, volume `3`).
